@@ -1,0 +1,25 @@
+{
+  "name": "iphone-duo-casestudy",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "motion": "13.2.0",
+    "three": "0.185.1"
+  },
+  "devDependencies": {
+    "vite": "8.2.2",
+    "typescript": "6.0.3",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "@types/three": "0.185.4"
+  }
+}
