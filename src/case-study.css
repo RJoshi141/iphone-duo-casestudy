@@ -105,6 +105,7 @@ body { margin: 0; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   padding: 0 20px;
 }
 .fold-toggle-icon { display: block; width: 15px; height: auto; }

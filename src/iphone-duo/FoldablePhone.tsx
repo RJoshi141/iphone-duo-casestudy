@@ -68,16 +68,20 @@ export function FoldToggle({ children, onClick, foldIcon, unfoldIcon, ...props }
   useMotionValueEvent(progress, 'change', value => setOpen(value >= 0.5))
   const label = open ? 'Fold' : 'Unfold'
   const icon = open ? foldIcon : unfoldIcon
-  return <button type="button" {...props} aria-pressed={open} aria-label={children ? undefined : label} onClick={event => { onClick?.(event); if (!event.defaultPrevented) toggle(event.detail === 0) }}>
-    {children ?? (icon ? <img className="fold-toggle-icon" src={icon} alt="" /> : label)}
+  return <button type="button" {...props} aria-pressed={open} onClick={event => { onClick?.(event); if (!event.defaultPrevented) toggle(event.detail === 0) }}>
+    {children ?? (icon ? <><img className="fold-toggle-icon" src={icon} alt="" />{label}</> : label)}
   </button>
 }
 
-export function FoldHalt({ children, onClick, target = 0.5, ...props }: ComponentProps<'button'> & { target?: number }) {
+export type FoldHaltProps = ComponentProps<'button'> & { target?: number; icon?: string }
+
+export function FoldHalt({ children, onClick, target = 0.5, icon, ...props }: FoldHaltProps) {
   const { progress, animateTo } = useFoldablePhone()
   const [active, setActive] = useState(Math.abs(progress.get() - target) < 0.01)
   useMotionValueEvent(progress, 'change', value => setActive(Math.abs(value - target) < 0.01))
-  return <button type="button" {...props} aria-pressed={active} onClick={event => { onClick?.(event); if (!event.defaultPrevented) animateTo(target) }}>{children ?? 'Stop halfway'}</button>
+  return <button type="button" {...props} aria-pressed={active} onClick={event => { onClick?.(event); if (!event.defaultPrevented) animateTo(target) }}>
+    {icon && <img className="fold-toggle-icon" src={icon} alt="" />}{children ?? 'Stop halfway'}
+  </button>
 }
 
 export function FoldScrubber({ className = '', ...props }: Omit<ComponentProps<'input'>, 'type' | 'min' | 'max' | 'value' | 'onChange' | 'defaultValue'>) {

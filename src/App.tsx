@@ -35,8 +35,8 @@ export default function App() {
             parallax={1}
           />
           <div className="phone-controls">
-            <FoldToggle foldIcon="/icons/fold.png" />
-            <FoldHalt>Half</FoldHalt>
+            <FoldToggle foldIcon="/icons/fold.png" unfoldIcon="/icons/unfold.png" />
+            <FoldHalt icon="/icons/half.png">Half</FoldHalt>
             <FoldScrubber />
           </div>
           <p className="phone-caption">
