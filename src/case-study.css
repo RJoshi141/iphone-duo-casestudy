@@ -47,7 +47,9 @@ body { margin: 0; }
   font: inherit;
   font-size: 13px;
   cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
 }
+.theme-toggle:hover { border-color: var(--accent); }
 .theme-toggle:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 
 .hero {
@@ -71,15 +73,16 @@ body { margin: 0; }
   font-weight: 700;
 }
 .dek {
-  margin: 0;
+  margin: 0 auto;
+  max-width: 560px;
   font-size: 18px;
-  line-height: 1.55;
+  line-height: 1.6;
   color: var(--ink-soft);
 }
 
 .phone-stage {
   max-width: 720px;
-  margin: 0 auto 88px;
+  margin: 0 auto 96px;
 }
 .phone-study { width: 100%; }
 .phone-study .duo-background { border-radius: 28px; background: var(--duo-paper); }
@@ -100,7 +103,9 @@ body { margin: 0; }
   font: inherit;
   font-size: 13px;
   cursor: pointer;
+  transition: border-color 0.15s ease;
 }
+.phone-controls button:hover { border-color: var(--accent); }
 .phone-controls button:has(.fold-toggle-icon) {
   display: inline-flex;
   align-items: center;
@@ -120,34 +125,65 @@ body { margin: 0; }
 
 .section {
   max-width: 720px;
-  margin: 0 auto 72px;
+  margin: 0 auto 80px;
+}
+.kicker {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
 }
 .section h2 {
-  font-size: 26px;
+  font-size: 27px;
   letter-spacing: -0.01em;
+  line-height: 1.25;
   margin: 0 0 20px;
-  padding-bottom: 12px;
+  padding-bottom: 16px;
   border-bottom: 1px solid var(--line);
 }
-.section > p { font-size: 17px; line-height: 1.65; color: var(--ink); }
+.section > p { font-size: 17px; line-height: 1.7; color: var(--ink); }
 .section-note {
   font-size: 14px;
   color: var(--ink-soft);
-  margin-top: -8px;
+  margin-top: -4px;
   margin-bottom: 20px;
 }
 
 .specs { margin: 0; display: flex; flex-direction: column; gap: 0; }
 .spec-row {
   display: grid;
-  grid-template-columns: 160px 1fr;
-  gap: 20px;
-  padding: 16px 0;
+  grid-template-columns: 170px 1fr;
+  gap: 24px;
+  padding: 18px 0;
   border-bottom: 1px solid var(--line);
 }
-.spec-row dt { font-size: 13px; font-weight: 600; color: var(--ink-soft); }
-.spec-row dd { margin: 0; font-size: 16px; }
-.spec-note { display: block; margin-top: 4px; font-size: 13px; color: var(--ink-soft); line-height: 1.5; }
+.spec-row:first-child { padding-top: 0; }
+.spec-row dt { font-size: 13px; font-weight: 600; color: var(--ink-soft); padding-top: 1px; }
+.spec-row dd { margin: 0; font-size: 16px; line-height: 1.55; }
+.spec-note { display: block; margin-top: 6px; font-size: 13.5px; color: var(--ink-soft); line-height: 1.55; }
+
+.pull-quote {
+  max-width: 640px;
+  margin: 0 auto 80px;
+  padding: 4px 0 4px 24px;
+  border-left: 3px solid var(--accent);
+}
+.pull-quote p {
+  margin: 0 0 10px;
+  font-size: 22px;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  font-weight: 500;
+}
+.pull-quote cite {
+  display: block;
+  font-style: normal;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
 
 .card-grid {
   display: grid;
@@ -159,7 +195,9 @@ body { margin: 0; }
   border: 1px solid var(--line);
   border-radius: 16px;
   padding: 20px;
+  transition: border-color 0.15s ease, transform 0.15s ease;
 }
+.card:hover { border-color: var(--accent); transform: translateY(-2px); }
 .card h3 { margin: 0 0 8px; font-size: 16px; }
 .card p { margin: 0; font-size: 14.5px; line-height: 1.6; color: var(--ink-soft); }
 
@@ -169,9 +207,11 @@ body { margin: 0; }
   border: 1px solid var(--line);
   border-radius: 16px;
   padding: 24px;
+  transition: border-color 0.15s ease;
 }
-.stack-item h3 { margin: 0 0 10px; font-size: 17px; }
-.stack-item p { margin: 0; font-size: 15.5px; line-height: 1.65; color: var(--ink); }
+.stack-item:hover { border-color: var(--accent); }
+.stack-item h3 { margin: 0 0 10px; font-size: 17px; line-height: 1.4; }
+.stack-item p { margin: 0; font-size: 15.5px; line-height: 1.7; color: var(--ink); }
 .stack-item .confidence {
   margin-top: 12px;
   font-size: 12.5px;
@@ -198,8 +238,9 @@ body { margin: 0; }
   .study { padding: 80px 16px 48px; }
   .card-grid { grid-template-columns: 1fr; }
   .spec-row { grid-template-columns: 1fr; gap: 4px; }
+  .pull-quote p { font-size: 19px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .theme-toggle, .phone-controls button { transition: none; }
+  .theme-toggle, .phone-controls button, .card, .stack-item { transition: none; }
 }
