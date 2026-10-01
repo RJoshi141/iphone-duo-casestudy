@@ -1,126 +1,76 @@
-export const specs: { term: string; detail: string; note?: string }[] = [
-  {
-    term: 'Displays',
-    detail: '5.4" outer and 7.6" inner, both Super Retina XDR with 120Hz ProMotion and 3,000 nits of outdoor peak brightness.',
-    note: 'The inner panel’s nano-texture coating is what scatters light across the crease. It doesn’t remove the fold, it just makes it harder to see.',
-  },
-  {
-    term: 'Chip',
-    detail: 'A20 Pro on a 2-nanometer process, the same silicon in the iPhone 18 Pro line.',
-  },
-  {
-    term: 'Hinge',
-    detail: 'Titanium, built from more than 100 components, with carbon fiber support plates underneath.',
-    note: 'Apple never published a fold-count rating for it.',
-  },
-  {
-    term: 'Durability',
-    detail: 'IP68 to 6 meters for 30 minutes, Ceramic Shield 2 on the outer glass, a Grade 5 titanium frame.',
-  },
-  {
-    term: 'Weight and thickness',
-    detail: '254 grams, 5.2mm thick when fully open.',
-    note: 'That’s 53 grams heavier and 0.7mm thicker than Samsung’s Galaxy Z Fold 8.',
-  },
-  {
-    term: 'Battery',
-    detail: 'Up to 24 hours of mixed use, or up to 44 hours of video on the outer screen alone.',
-  },
-  {
-    term: 'Cameras',
-    detail: '48-megapixel main and 48-megapixel ultra wide. No telephoto lens.',
-  },
-  {
-    term: 'Price',
-    detail: 'Starts at $1,999 for 256GB, up to $3,199 for 2TB.',
-    note: 'That’s $700 more than an iPhone 18 Pro Max, which has the telephoto lens this doesn’t.',
-  },
-]
-
-export const pullQuote = {
-  text: 'Hold us accountable to that, please.',
-  context:
-    'Tom Marieb, Apple’s VP of hardware engineering, on the inner display’s matte finish and whether the crease stays hidden after a year of folding.',
+export const insight = {
+  text: 'The hinge itself was the easy part. Making a photo look like a screen was not.',
 }
 
-export const softwareShifts = [
+export const buildNotes = [
   {
-    title: 'Split View comes to iPhone',
-    body: 'iOS 27.1 lets two apps sit side by side on an iPhone for the first time, or two windows of the same app, like a pair of Safari tabs you can actually see at once instead of flipping between them. Apple’s own demo paired Siri answering a question on one side with the source document still open on the other.',
+    title: 'A still model, not a working phone',
+    body: "Apple's own product page uses a viewer a lot like this one: the same 3D file, slowly rotating, responding to a drag. It looks great and does nothing. The screen is a single image baked onto the mesh, and that's the whole interaction. I wanted to see what it would take to make that file actually work: fold it, stop it halfway, watch the outer screen wake up while the inner one goes soft. No pre-rendered animation and no video standing in for the display. Just the real file Apple publishes, driven by code.",
   },
   {
-    title: 'The controls move to the edge',
-    body: 'The Dock, the Lock Screen controls, and app navigation all shift from the bottom edge to the side edge. The status cluster becomes a small rounded element that tucks into the corner instead of stretching across the top, and the Dynamic Island now runs along the outer edge of the big screen rather than sitting centered up top.',
-  },
-  {
-    title: 'Posture matters, not just open or closed',
-    body: 'The software tracks how far the hinge is angled, not just whether the phone is shut or fully flat. Content shifts away from the crease as you partially fold it so your taps still land where you expect, the audio tuning compensates for the growing distance between the speakers as the halves swing apart, and sensors in each half let the phone balance on a table and stay usable without a stand.',
-  },
-  {
-    title: 'The outer screen is more than a preview window',
-    body: 'StandBy works on whichever display is facing up, charging or not. The camera system adds Duo Preview, a live mirror of the shot on the outer display for whoever is in front of the lens, Kid Cue, a small Peanuts animation that gets a toddler looking at the right camera, and Duo FaceTime, where someone standing nearby can join a call through the outer screen instead of crowding into frame.',
+    title: "What's already in Apple's file",
+    body: "The glTF isn't just a shape. One mesh inside it is named folding-half, so the asset itself marks which part of the body needs to rotate and around what hinge line. That's the one hint Apple leaves you. Everything else, how far it swings, how fast, what the screen does while it moves, is left to whoever renders it. I load the file once with three.js's GLTFLoader, find that node by name, and from then on, moving the phone is just setting one rotation value on one object, every frame. Two of the materials are named too, inner-screen and cover-screen, so I can find them and swap in my own shader without touching the frame, the glass, or the camera bump Apple modeled. A small environment map, built from three.js's RoomEnvironment and baked down with PMREMGenerator, gives the titanium something real to reflect, and the renderer runs in ACES filmic tone mapping so the highlights don't blow out under the key light.",
   },
 ]
 
-export const critiques = [
+export const screenShader = {
+  kicker: 'The screen',
+  heading: 'Faking a screen that is actually a photo',
+  body: "There's no video and no second render target behind the glass. The screen is a flat wallpaper image projected onto the curved display mesh in real time, with a shader doing the work real pixels would do. For every point on the screen, it works out where a ray from the camera through that point would cross a flat plane facing the lens, then uses that crossing point to look up a pixel in the wallpaper. Tilt the phone and the image shifts like it's sitting behind the glass instead of painted on it.",
+  body2: "The inner and outer screens needed different math. The inner display is one flat plane, so it just needs a camera-facing projection. The cover display curves further around the body, so I gave it two reference points along the hinge edge instead and project along the line between them. That's the difference between a screen that looks right from one angle and one that holds up while you spin the whole phone around. A second image, the home screen icons, blends on top through its own alpha channel, so the wallpaper shows through everywhere an icon doesn't sit.",
+  body3: "There's also no real screen to go soft, so I fake depth of field by hand: sampling a blurred mip level of the texture and jittering four extra samples in a small ring around each pixel, weighted by distance. How strong that blur is depends on how far open the phone is, so the inner screen visibly softens as you close it and the cover screen sharpens as it comes into view.",
+}
+
+export const codeSnippet = {
+  label: 'fold-choreography.ts',
+  code: `export function foldChoreography(progress: number) {
+  const p = Math.max(0, Math.min(1, progress))
+  const hinge = Math.min(1, p / 0.96)
+  return {
+    angle: (1 - hinge) * Math.PI,
+    coverFocusEdge: 1.25 - Math.min(1, p / 0.45) * 1.1,
+    innerDefocus: (1 - p) ** 0.65,
+  }
+}`,
+  note: "Every visual change on the phone comes from this one function. It takes a single 0 to 1 value, how far open the phone is, and turns it into the hinge angle, where the focus line sits on the cover screen, and how blurred the inner screen gets. The last four percent of travel is reserved on purpose: the hinge finishes closing a beat before the fold animation ends, so the focus and blur effects have room to settle instead of cutting off abruptly.",
+}
+
+export const details = [
   {
-    title: 'No fold-count rating anywhere in the spec sheet',
-    body: 'Apple published the hinge’s part count, the titanium grade, and an IP68 rating, but not the number that actually describes how long a hinge lasts: how many open-and-close cycles it’s rated for. That’s exactly the kind of number you can’t infer from material specs alone, and for a phone whose entire premise is a moving part, its absence is the most telling line in an otherwise detailed spec sheet.',
+    title: 'Drag it, scrub it, or click',
+    body: 'Three different inputs move the same underlying value. A click flips the phone between fully open and fully closed over a two second ease. Pressing and dragging tracks your pointer directly with no animation at all, so it feels like you are pulling the hinge yourself. A slider underneath lets you stop at an exact angle, and it doubles as the accessible control: a screen reader announces the position in degrees instead of a raw decimal.',
   },
   {
-    title: 'The crease is a promise, not a measurement',
-    body: 'Apple’s VP of hardware engineering described the matte nano-texture finish that scatters light across the fold, then asked people to judge it for themselves over time rather than citing a durability figure. That’s an honest thing to say, and it’s also not a number. The crease looks gone in a demo on day one. Whether it stays that way after a year of folding is something only owners will be able to report back on.',
+    title: 'Telling a drag from a click',
+    body: 'A press that moves more than five pixels before release counts as a drag, and once it does, the click event that follows gets swallowed so letting go does not also trigger a toggle. Scrolling or pinching zooms the camera instead, clamped to a range close enough to see detail and far enough to see the whole phone, entirely separate from the fold gesture.',
   },
   {
-    title: 'The hinge-angle API is scoped to effects, not layout, as far as I can tell',
-    body: 'Developer write-ups from Apple’s September Tech Talks describe a hinge API that reports a discrete state and a continuous angle, scoped to interactions and visual effects rather than layout decisions. If that holds, an app can’t yet reflow its content continuously as you tilt the screen the way this demo reflows a 3D scene. Layout instead branches on size class and on reserved regions. That’s a reasonable first version, but it means the “angle as a real input” idea this demo leans on isn’t fully available to third-party apps yet.',
-    confidence: 'Sourced from developer summaries of Apple’s Tech Talks, not the SDK headers themselves. I couldn’t confirm exact signatures on this machine.',
+    title: 'Keeping the hinge in frame',
+    body: 'As the phone closes, the whole model also shifts sideways by a small amount tied to the same hinge angle, so the fold point stays roughly centered instead of one half swinging out of view. It is a tiny adjustment, but without it the phone visibly drifts off frame by the time it is shut.',
   },
   {
-    title: 'The SDK arrived six weeks before the phone did',
-    body: 'Apple announced the Duo on September 9 with six Tech Talks and a design guide, but the actual developer tools for handling the fold only landed in the Xcode 27.1 beta later that month. Teams had roughly six weeks to retrofit real layouts before the October 23 ship date. A $1,999 phone launching to a thin app library isn’t really a mystery once you look at that timeline.',
-    confidence: 'Pieced together from a developer’s own account of the SDK rollout, not an Apple-published schedule.',
-  },
-  {
-    title: 'A screen shaped for documents fights ordinary video',
-    body: 'The inner display’s aspect ratio is great for side-by-side apps and terrible for 16:9 video, which gains a lot of area over a regular iPhone screen but loses a chunk of it right back to letterboxing. It’s a real trade-off, not a bug: the same proportions that make Split View usable are the ones that waste space the moment you open something built for a normal phone screen.',
-  },
-  {
-    title: 'Foldables have never been repairable, and nothing here says this one is different',
-    body: 'Even the most repairable foldable on the market today scores a 4 out of 10 on iFixit’s scale, with a 200-plus step guide just to replace the inner screen. Dust still finds its way into every foldable hinge tested so far, IP68 rating or not. Apple hasn’t published anything that suggests the Duo breaks that pattern, which means the realistic plan for a cracked inner screen is probably the same one Samsung owners have had for years: pay Apple directly, or don’t drop it.',
+    title: 'Built to turn off',
+    body: 'With reduced motion on, none of the eased animation plays. The fold jumps straight to its new position, including mid-drag, which took more care than adding it as an afterthought: it has to cleanly interrupt whatever animation might already be running. The day and night wallpapers swap as separate textures tied to the theme toggle, so a light or dark switch never needs a new model load, and every control is a plain button or range input, not canvas-drawn, so a keyboard and a screen reader both just work.',
   },
 ]
 
-export const opportunities = [
+export const nextSteps = [
   {
-    title: 'Pair a source with its explanation',
-    body: 'On-device AI is the headline addition to iOS 27 (an upgraded Foundation Models framework, a new Core AI framework for running full local models). The Duo is the first iPhone that can show a document and an AI’s reading of it at the same time, side by side, so a person can check the machine’s work without losing the original. That trust problem, not the summarizing itself, is the interesting thing to design for.',
+    title: 'Give the hinge some resistance',
+    body: 'Right now opening and closing both move at the same constant rate. A real hinge has friction and a bit of give near the ends. Swapping the linear ease for a spring would make the motion feel less like a slider and more like a mechanism.',
   },
   {
-    title: 'Design for hands-busy, screen-lit moments',
-    body: 'Apple called out 3,000 nits of outdoor brightness on the inner display specifically. That spec is wasted on an app meant to be held close and read quietly. It’s built for outdoor, glanceable, one-handed use: coaching, fieldwork, anything where a phone currently gets propped against something because both hands are busy.',
+    title: 'Bake the crease in, not fake it',
+    body: 'The crease right now is a shading trick in the shader, a darkening gradient timed to the fold. A proper displacement or normal map baked along the hinge line would hold up under closer inspection and under more dramatic lighting.',
   },
   {
-    title: 'Build for two people, not one',
-    body: 'A screen that opens flat into two surfaces facing two different people is new to phones. Almost nothing is designed around that yet. Duo FaceTime is Apple’s only shipped example of “this screen now has two audiences,” which leaves the idea wide open for anyone building a portfolio piece.',
-  },
-  {
-    title: 'Keep score on the number Apple won’t publish',
-    body: 'Nobody outside Cupertino knows what this hinge is actually rated for. A small utility that quietly counts open-and-close cycles, or just tells you how many folds you’re at, would turn a marketing silence into something an owner can actually track. It’s a tiny app, but it’s the kind a new form factor always needs first: not a port of something that already exists, just a thing that only makes sense because the hardware folds.',
+    title: 'Drive it from a real sensor',
+    body: 'On a device with a hinge angle sensor or even just an accelerometer, the same progress value this page animates by hand could come from the actual phone in your actual hands.',
   },
 ]
 
-export const sources: { label: string; url: string }[] = [
-  { label: 'Apple Newsroom: Apple unveils iPhone Duo', url: 'https://www.apple.com/newsroom/2026/09/apple-unveils-iphone-duo/' },
-  { label: 'MacRumors: iPhone Duo roundup, everything we know', url: 'https://www.macrumors.com/roundup/iphone-duo/' },
-  { label: 'Tom’s Guide: iPhone Duo hands-on', url: 'https://www.tomsguide.com/phones/iphones/iphone-duo-hands-on-apple-nailed-it-and-just-put-everyone-else-on-notice' },
-  { label: 'TechRadar: how Apple solved the foldable crease problem', url: 'https://www.techradar.com/phones/iphone/iphone-duo-hands-on' },
-  { label: 'MacRumors: Apple exec says “hold us accountable” on the crease', url: 'https://www.macrumors.com/2026/09/19/apple-exec-iphone-crease/' },
-  { label: 'Mac Observer: the fold-count rating Apple didn’t publish', url: 'https://www.macobserver.com/tips/round-ups/iphone-duo-hinge-durability-ip68-fold-count-not-published/' },
-  { label: 'iFixit: will the iPhone Duo be repairable? We’re skeptical', url: 'https://www.ifixit.com/News/119205/will-the-iphone-duo-be-repairable-were-skeptical' },
-  { label: 'Blake Crosley: the 1.42 problem and the SDK gap', url: 'https://blakecrosley.com/blog/iphone-duo-for-developers' },
-  { label: 'TechRepublic: iPhone Duo vs iPhone 18 Pro Max, the $700 gap', url: 'https://www.techrepublic.com/article/news-iphone-duo-vs-pro-max/' },
-  { label: 'AppleInsider: iPhone Fold and the 2026 foldable shipment rebound', url: 'https://appleinsider.com/articles/26/07/01/iphone-fold-expected-to-take-29-of-2026-foldable-phone-screen-orders' },
-  { label: 'DevClass: Apple iPhone Duo makes developers think in folds', url: 'https://www.devclass.com/development/2026/09/16/apple-iphone-duo-makes-developers-think-in-folds/5296425' },
-  { label: 'Apple Developer: Xcode 27.1 beta release notes', url: 'https://developer.apple.com/documentation/xcode-release-notes/xcode-27_1-release-notes' },
+export const credits: { label: string; url: string }[] = [
+  { label: 'Apple: the iPhone Duo page this model and its textures come from', url: 'https://www.apple.com/iphone-duo/' },
+  { label: 'three.js, for the renderer, the glTF loader, and the environment lighting', url: 'https://threejs.org/' },
+  { label: 'Motion, for the fold progress value and its animation', url: 'https://motion.dev/' },
 ]
